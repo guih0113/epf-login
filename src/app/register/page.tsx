@@ -8,7 +8,7 @@ import { FaGithub, FaGoogle, FaTwitter } from 'react-icons/fa'
 import z from 'zod'
 
 const registerFormSchema = z.object({
-  email: z.email(),
+  email: z.email('E-mail inválido.'),
   username: z.string().min(5, 'O nome de usuário deve ter, no mínimo, 5 caracteres.'),
   password: z
     .string()
