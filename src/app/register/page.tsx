@@ -6,12 +6,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { FaGithub, FaGoogle, FaTwitter } from 'react-icons/fa'
 import z from 'zod'
 import { authClient } from '@/lib/auth-client'
 
 const registerFormSchema = z.object({
-  email: z.string().email('E-mail inválido.'),
+  email: z.email('E-mail inválido.'),
   username: z.string().min(5, 'O nome de usuário deve ter, no mínimo, 5 caracteres.'),
   password: z.string().min(6, 'A senha deve ter, no mínimo, 6 caracteres.'),
 })
@@ -183,16 +182,6 @@ export default function Register() {
               <span className="cursor-pointer underline hover:no-underline">Faça log-in</span>
             </Link>
           </p>
-
-          <div className="space-y-5 text-center text-sm">
-            <p className="text-zinc-500">Ou continue com</p>
-
-            <div className="flex justify-center gap-6">
-              <FaTwitter className="size-6 cursor-pointer transition-transform duration-200 hover:scale-110" />
-              <FaGoogle className="size-6 cursor-pointer transition-transform duration-200 hover:scale-110" />
-              <FaGithub className="size-6 cursor-pointer transition-transform duration-200 hover:scale-110" />
-            </div>
-          </div>
         </form>
       </div>
     </div>

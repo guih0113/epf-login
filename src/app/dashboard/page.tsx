@@ -13,8 +13,9 @@ export default async function DashBoard() {
   }
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center gap-4">
-      <p className="text-lg">Usuário: teste</p>
+    <div className="flex h-screen flex-col items-center justify-center gap-1">
+      <p className="text-lg">Usuário: {session.user.name}</p>
+      <p className='text-lg'>E-mail: {session.user.email}</p>
       <Button />
     </div>
   )

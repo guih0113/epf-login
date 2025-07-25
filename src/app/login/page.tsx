@@ -6,12 +6,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { FaGithub, FaGoogle, FaTwitter } from 'react-icons/fa'
+import { FaDiscord, FaFacebookF, FaGithub } from 'react-icons/fa'
 import z from 'zod'
 import { authClient } from '@/lib/auth-client'
 
 const loginFormSchema = z.object({
-  email: z.string().email('E-mail inválido.'),
+  email: z.email('E-mail inválido.'),
   password: z.string().min(6, 'A senha deve ter, no mínimo, 6 caracteres.'),
 })
 
@@ -23,7 +23,12 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const { handleSubmit, reset, register } = useForm<LoginFormSchema>({
+  const {
+    handleSubmit,
+    reset,
+    register,
+    formState: { errors },
+  } = useForm<LoginFormSchema>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: '',
@@ -67,6 +72,27 @@ export default function Login() {
     reset()
   }
 
+  async function handleSignInWithGithub() {
+    await authClient.signIn.social({
+      provider: 'github',
+      callbackURL: '/dashboard',
+    })
+  }
+
+  async function handleSignInWithDiscord() {
+    await authClient.signIn.social({
+      provider: 'discord',
+      callbackURL: '/dashboard',
+    })
+  }
+
+  async function handleSignInWithFacebook() {
+    await authClient.signIn.social({
+      provider: 'facebook',
+      callbackURL: '/dashboard',
+    })
+  }
+
   return (
     <div className="flex h-screen items-center justify-center">
       <div
@@ -87,7 +113,7 @@ export default function Login() {
             <label htmlFor="email" className="text-sm">
               E-mail
             </label>
-            <div className="relative mt-2 rounded-md bg-zinc-700 px-3 py-3 text-sm">
+            <div className="relative my-2 rounded-md bg-zinc-700 px-3 py-3 text-sm">
               <span className="absolute">📧</span>
               <input
                 type="email"
@@ -97,13 +123,14 @@ export default function Login() {
                 className="ml-8 outline-none"
               />
             </div>
+            {errors.email && <span className="text-red-500 text-sm">{errors.email.message}</span>}
           </div>
 
           <div>
             <label htmlFor="password" className="text-sm">
               Password
             </label>
-            <div className="relative mt-2 rounded-md bg-zinc-700 px-3 py-3 text-sm">
+            <div className="relative my-2 rounded-md bg-zinc-700 px-3 py-3 text-sm">
               <span className="absolute">🔒</span>
               <input
                 type="password"
@@ -113,6 +140,7 @@ export default function Login() {
                 className="ml-8 outline-none"
               />
             </div>
+            {errors.password && <span className="text-red-500 text-sm">{errors.password.message}</span>}
           </div>
 
           <button
@@ -157,9 +185,15 @@ export default function Login() {
             <p className="text-zinc-500">Ou continue com</p>
 
             <div className="flex justify-center gap-6">
-              <FaTwitter className="size-6 cursor-pointer transition-transform duration-200 hover:scale-110" />
-              <FaGoogle className="size-6 cursor-pointer transition-transform duration-200 hover:scale-110" />
-              <FaGithub className="size-6 cursor-pointer transition-transform duration-200 hover:scale-110" />
+              <button type="button" onClick={handleSignInWithFacebook}>
+                <FaFacebookF className="size-6 cursor-pointer transition-transform duration-200 hover:scale-110" />
+              </button>
+              <button type="button" onClick={handleSignInWithDiscord}>
+                <FaDiscord className="size-6 cursor-pointer transition-transform duration-200 hover:scale-110" />
+              </button>
+              <button type="button" onClick={handleSignInWithGithub}>
+                <FaGithub className="size-6 cursor-pointer transition-transform duration-200 hover:scale-110" />
+              </button>
             </div>
           </div>
         </form>
