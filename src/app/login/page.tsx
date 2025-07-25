@@ -1,15 +1,69 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { FaGithub, FaGoogle, FaTwitter } from 'react-icons/fa'
+import z from 'zod'
+import { authClient } from '@/lib/auth-client'
+
+const loginFormSchema = z.object({
+  email: z.string().email('E-mail inválido.'),
+  password: z.string().min(6, 'A senha deve ter, no mínimo, 6 caracteres.'),
+})
+
+type LoginFormSchema = z.infer<typeof loginFormSchema>
 
 export default function Login() {
-  const { handleSubmit, reset, register } = useForm()
+  const router = useRouter()
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  function handleMakeLogin() {
-    console.log('test')
+  const { handleSubmit, reset, register } = useForm<LoginFormSchema>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  })
+
+  async function onSubmit(formData: LoginFormSchema) {
+    setMessage('')
+    setError('')
+    setLoading(true)
+
+    const { error: authError } = await authClient.signIn.email(
+      {
+        email: formData.email,
+        password: formData.password,
+        callbackURL: '/dashboard',
+      },
+      {
+        onRequest: (ctx) => {
+          console.log('Requisição Better Auth:', ctx)
+        },
+        onSuccess: (ctx) => {
+          console.log('Logado com sucesso:', ctx)
+          setMessage('Login realizado com sucesso! Redirecionando...')
+          router.replace('/dashboard')
+        },
+        onError: (ctx) => {
+          console.error('Erro ao criar conta com Better Auth:', ctx)
+          setError(ctx.error.error || 'Erro ao logar. Verifique os dados.')
+        },
+      },
+    )
+
+    setLoading(false)
+    if (authError) {
+      console.error('Erro direto do authClient:', authError)
+      setError(authError.message || 'Ocorreu um erro inesperado no cadastro.')
+    }
+
     reset()
   }
 
@@ -28,7 +82,7 @@ export default function Login() {
           <p className="text-sm text-zinc-400">Seja vem vindo de volta, sentimos sua falta!</p>
         </div>
 
-        <form onSubmit={handleSubmit(handleMakeLogin)} className="w-full space-y-5 px-10">
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-5 px-10">
           <div>
             <label htmlFor="email" className="text-sm">
               E-mail
@@ -61,15 +115,40 @@ export default function Login() {
             </div>
           </div>
 
-          <input
+          <button
             type="submit"
-            value="Log-in"
-            className="mt-3 w-full cursor-pointer rounded-lg bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] py-3 font-bold text-sm"
-          />
+            disabled={loading}
+            className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] py-3 font-bold text-sm disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? (
+              <>
+                {/** biome-ignore lint/a11y/noSvgWithoutTitle: aaa */}
+                <svg
+                  className="h-5 w-5 animate-spin text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Cadastrando...
+              </>
+            ) : (
+              'Cadastrar'
+            )}
+          </button>
+
+          {message && <p className="mt-2 text-center text-green-400">{message}</p>}
+          {error && <p className="mt-2 text-center text-red-500">{error}</p>}
 
           <p className="text-center text-sm">
             Não possui uma conta?{' '}
-            <Link href="register">
+            <Link href="register" prefetch>
               <span className="cursor-pointer underline hover:no-underline">Cadastre-se</span>
             </Link>
           </p>
